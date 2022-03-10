@@ -35,11 +35,20 @@ def test_multi_call():
     @pfp.forward
     def increment(x, inc=pfp.Aspect(1)):
         return x + inc
-    #assert increment(increment(1)).call(inc=2) == 5  # 1+2+2
-    #assert increment(increment(1, 2), 3).call(inc=2) == 6  # 1+2+3
-    #assert increment(increment(1, 2), 3).call() == 6  # 1+2+3
-    #assert increment(increment(1), 3).call() == 7  # 1+3+3 (external scope overrides internal scope)
+    assert increment(increment(1)).call(inc=2) == 5  # 1+2+2
+    assert increment(increment(1, 3), 2).call() == 6  # 1+3+2
+    assert increment(increment(1, 2), 3).call() == 6  # 1+2+3
+    assert increment(increment(1), 3).call() == 7  # 1+3+3 (external scope overrides internal scope)
     assert increment(increment(1, 3)).call() == 7  # 1+3+3 (internal scope also overrides external scope)
+
+
+def test_conflicting_declarations():
+    @pfp.forward
+    def increment(x, inc=pfp.Aspect(1)):
+        return x + inc
+    increment(increment(1, 3), 2).call(inc=2)
+    with pytest.raises(Exception):
+        print(increment(increment(1, 3), 2).call(inc=3))
 
 
 def test_scope_escaping():
@@ -75,7 +84,6 @@ def test_scope_escaping():
         assert similarity(x, y, KLdivergence, normalization="L2") == 0
 
 
-
 def test_intermediate_operations():
     @pfp.forward
     def add(x, permutation=pfp.Aspect(1)):
@@ -87,8 +95,8 @@ def test_intermediate_operations():
 
     intermediate = add(1)
     ret = mult(intermediate)
-    assert ret.call() == 4
-    assert ret.run(permutation=2) == 6
+    assert ret.call() == 6
+    assert ret.call(permutation=3) == 12
 
 
 def test_class_initialization():
@@ -103,4 +111,4 @@ def test_class_initialization():
             return self
 
     test_obj = Tester(2)
-    print(test_obj.apply().apply().run(scale=2.))
+    assert test_obj.call(scale=2.).apply().apply().x == 0.5
