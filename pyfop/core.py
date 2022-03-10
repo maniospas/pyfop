@@ -83,9 +83,6 @@ class PendingCall:
         for kw, val in original_kwargs.items():
             if isinstance(val, Aspect):
                 evaluated_kwargs[kw] = val.call(aspects)
-        print(original_kwargs, aspects.kwargs, evaluated_kwargs)
-        #kwargs = aspects.full_kwargs(self.method, **kwargs)  # parse again to account for the outcome of children calls
-        #kwargs = {argname(kw, arg): arg.call(aspects) if isinstance(arg, Aspect) else arg for kw, arg in kwargs.items()}
         return self.method(**evaluated_kwargs)
 
 
