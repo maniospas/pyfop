@@ -51,6 +51,15 @@ def test_conflicting_declarations():
         print(increment(increment(1, 3), 2).call(inc=3))
 
 
+def test_unused_imports():
+    @pfp.forward
+    def increment(x, inc=pfp.Aspect(1)):
+        return x + inc
+    increment(increment(1, 3), 2).call(inc=2)
+    with pytest.raises(Exception):
+        print(increment(increment(1, 3), 2).call(incr=3))
+
+
 def test_scope_escaping():
     import numpy as np
 

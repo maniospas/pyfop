@@ -42,5 +42,5 @@ class Similarity:
 x = np.array([1., 1., 1.])
 y = np.array([1., 1., 1.])
 
-print(Similarity(normalize, dot, norm=2)(x, y))
+print(Similarity(tautology, dot, norm=2)(x, y))
 

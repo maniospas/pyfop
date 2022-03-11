@@ -1,15 +1,28 @@
 # pyfop
-`pyfop` is a library that introduces the concept
-of forward-oriented programming in Python.
-This consists of lazy code execution 
-by waiting until the last possible moment
-to make sure that all execution parameters
-(method arguments) are appropriately synchronized.
+A novel forward-oriented programming paradigm for Python.
 
-This paradigm promotes component-based
-development with scoped behavioral changes,
-where critically called components can
-affect the behavior of callees.
+**Dependencies:** None<br/>
+**Developer:** Emmanouil (Manios) Krasanakis<br/>
+**Contant:** maniospas@hotmail.com
+
+## About
+`pyfop` is a package that introduces the concept
+of forward-oriented programming in Python. This
+aims to simplify component-based development that
+aims to share parameters across multiple components.
+
+Contrary to typical programming paradigms, it makes
+use of static variable annotations that can mark
+them as aspects spanning multiple components and
+whose values and whose values are automatically
+retrieved, initialized and exchanged. Aspect
+values persist through calls of methods annotated
+with the package's wrapper *and* persist when
+called methods return.
+
+This way, only the components interested in respective
+aspect variables handle their usage. This is achieved
+with lazy execution.
 
 # Problem Statement
 To understand forward execution, let us create a 
