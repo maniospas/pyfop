@@ -8,165 +8,126 @@ A novel forward-oriented programming paradigm for Python.
 ## About
 `pyfop` is a package that introduces the concept
 of forward-oriented programming in Python. This
-aims to simplify component-based development that
-aims to share parameters across multiple components.
+aims to simplify component-based development by
+sharing parameters across multiple components.
 
-Contrary to typical programming paradigms, it makes
-use of static variable annotations that can mark
-them as aspects spanning multiple components and
-whose values and whose values are automatically
-retrieved, initialized and exchanged. Aspect
-values persist through calls of methods annotated
-with the package's wrapper *and* persist when
-called methods return.
+Contrary to typical programming paradigms,
+static annotations are used to mark variables
+as aspects spanning multiple components whose 
+values are automatically retrieved, initialized 
+and exchanged.
 
-This way, only the components interested in respective
-aspect variables handle their usage. This is achieved
-with lazy execution.
+# :zap: Quickstart
+Overall, there are three steps to using the library:
+1. wrapping some components with a lazy execution decorator
+2. assigning some arguments of these components as aspects
+3. calling components
 
-# Problem Statement
-To understand forward execution, let us create a 
-simple setting in which we want to compare two
-`numpy` vectors `x,y` under various measures,
-let's say with the dot product and KL-divergence.
-This can be easily achieved through the following
-implementations: 
+To see these in action,
+let us create a system where we transform (e.g. normalize) 
+`numpy` arrays and then compare them with known data mining
+measures. We will make this system modular by allowing
+combination of various transformation and comparison components.
 
-```python
-import numpy as np
+First, we define a couple of single-input
+array transformation methods `tautology` and `normalize`, 
+as well as two pairwise array comparison methods
+`dot` and `KLdivergence`. In addition to array inputs,
+some of these methods also make use of optional
+parameter values, such as `norm` to indicate
+the type of normalization and `epsilon` to offset
+division with or logarithms of zero.
 
-def dot(x, y):
-    return np.sum(x*y)
+We make arguments share-able by name between
+objects by wrapping their default values with the
+`@pyfop.Aspect` class. For example, if `normalize`
+and `KLdivergence` are used together in the same
+call, their `norm` argument would obtain the same value.
+This value is either determined through the priority 
+defaults (the package would throw an
+error if the same priorities tried to set different
+values with the same priorities)
+and can be customized during calls.
 
-def KLdivergence(x, y):
-    return np.sum(x*np.log(x/y))
-```
-
-To spice things up, we also introduce the ability to 
-perform normalization and bring everything together in 
-one system that compare the vectors:
-
-```python
-def _normalizer(x, normalization):
-    if normalization == "L1":
-        return x / np.sum(x)
-    if normalization == "L2":
-        return x / np.sqrt(np.sum(x*x))
-    if normalization is None:
-        return x
-    raise Exception("Invalid normalization type")
-
-def compare(x, y, measure, normalization):
-    normalized_x = _normalizer(x, normalization)
-    normalized_y = _normalizer(y, normalization)
-    return measure(normalized_x, normalized_y)
-```
-
-Easy, right? Surely, anybody can write expressions
-like `compare(x, y, dot, normalization="L2")`, which
-effectively computes the cosine similarity between
-vectors.
-
-If only the real world was that simple! The above
-implementation is fine to use by oureselves but is
-a nightmare to deploy into component-based systems.
-
-First of all, you may have already noticed that I
-do not include default parameter values. This is 
-on purpose, since these could depend on the type
-of measure used. For the dot product, L2 normalization
-usually makes sense to compute the reputable cosine
-similarity. However, for KL-diverence, which considers
-similarities between probability distributions, 
-it makes sense to have a L1 default value to make
-both vector elements sum to one (and hence model
-said distributions).
-
-And this is only the beginning of our problems!
-
-Let's say that we also want error checking in there,
-for example to make sure that KL-divergence is
-never computed with L2 normalization of base vectors.
-There are several ways to achieve this. 
-
-- Writing 
-additional checks within the method `similarity` so
-that errors are raised when some conditions are met.
-This is ugly, does not scale well to complex systems
-(imagine what happens if several components interact
-with each other and we need to catch specific edge cases),
-and non-comprehensible, since it separates error
-checking from the code it refers to. A similar mechanism
-can handle default value assignment. 
-
-- Passing a normalization argument to *all* measure
-method signatures. This includes useless arguments that
-are completely ignored by some measures (e.g. by the 
-dot product). This drastically increases code complexity
-and reduces comprehensibility of produced code by
-passing useless information back-and-forth. What's
-worse, it can not even address the challenge of presenting
-different default arguments tailored to the measures 
-of choice.
-
-- Create an object to hold potential parameters. This
-does not help a lot - we just added complexity by offloading
-the cost of writing complex method signature.
-
-- Turn all measures into their own classes and implement
-error checking and default setting methods. This is the 
-most realistic option in terms of providing high-quality
-code. However, not to mention that it is not very Python-ic,
-it multiplies written lines of code by replacing each
-method with 4 others (constructors, error checking, default
-values, and the original implementations).
-
-Ok, we found that some promising software engineering 
-practices do not help a lot in writing simple 
-comprehensible code. What's next?
-
-# Quickstart
-Let's see how `pyfop` addresses the above challenges. 
-In fact, doing so is as easy as adding only a couple
-of statements here and there. These are limited to
-the `@pyfop.forward` method decorator,
-`pyfop.Aspect` variable initialization available
-for decorated methods and the `call()` method 
-used to run decorated methods.
-
-First, our decorators are easy to conceptualize:
-they create wrappers for code methods
-that wait until the `call()` method to run
-(this method can also take more arguments
-Decorated methods can be passed as arguments
-
+To parse aspects as values, we also need to set up our
+methods for lazy execution required by the package.
+This is achieved by adding a `@pyfop.lazy` decorator.
 
 
 ```python
 import pyfop as pfp
 import numpy as np
 
+@pfp.lazy
+def tautology(x):
+    return x
+
+@pfp.lazy
+def normalize(x, norm=pfp.Aspect(2)):
+    return x / (np.sum(x**norm))**(1./norm)
+
+@pfp.lazy
 def dot(x, y):
     return np.sum(x*y)
 
-@pfp.forward
-def KLdivergence(x, y, normalization=pfp.Aspect("L1")):
-    if normalization == "L2":
-        raise Exception("KLDivergence should not work on L1 normalization")
-    return np.sum(x*np.log(x/y))
-
-@pfp.forward
-def normalizer(x, normalization=pfp.Aspect()):
-    if normalization == "L1":
-        return x / np.sum(x)
-    if normalization == "L2":
-        return x / np.sqrt(np.sum(x*x))
-    if normalization is None:
-        return x
-    raise Exception("Invalid normalization type")
-
-def similarity(x, y, measure, normalization=pfp.Aspect()):
-    return measure(normalizer(x, normalization), normalizer(y, normalization)).call()
-
-
+@pfp.lazy
+def KLdivergence(x, y, 
+                 norm=pfp.Aspect(1, priority=pfp.Priority.INCREASED), 
+                 epsilon=pfp.Aspect(np.finfo(float).eps)):
+    if norm != 1:
+        raise Exception("KLDivergence should not work on non-L1 normalizations")
+    return np.sum(-x*np.log(x/(y+epsilon)+epsilon))
 ```
+
+We finally bring together various normalization and comparison
+strategies in the following class. This stores lazy execution
+methods as well as any additional keyword arguments `kwargs`
+to be used for aspect values. Then, when comparing arrays,
+it runs the lazy execution with these arguments. 
+
+```python
+class Comparator :
+    def __init__(self, transform, measure, **kwargs):
+        self.transform = transform
+        self.measure = measure
+        self.kwargs = kwargs
+
+    def __call__(self, x, y):
+        transformed_x = self.transform(x)
+        transformed_y = self.transform(y)
+        return self.measure(transformed_x, transformed_y).call(**self.kwargs)
+```
+
+For example, we can write the following expression to
+compute the cosine similarity between two arrays. 
+
+```python
+x = np.array([1., 1., 1.])
+y = np.array([1., 1., 1.])
+print(Comparator(normalize, dot, norm=2)(x, y))
+```
+
+If we did not provide a `norm` argument to the constructor
+to be eventually passed to lazy execution, the first
+default value would be inferred (in this case, `norm=2` 
+based on the default of normalization). 
+
+This default can change depending on what is being executed.
+For example, the following code automatically infers `norm=1`
+based on priority conflict resolution.
+
+```python
+print(Comparator(normalize, KLdivergence, epsilon=0)(x, y))
+```
+
+`pyfop` makes error checking trivial; we just needed to add
+the normalization aspect to KLdivergence and check for the
+shared value. For example, adding a `norm=2` argument to the
+previous command will throw an error.
+
+
+# :fire: Features
+* Non-intrusive programming interface (minimal changes to code).
+* Value sharing between aspect arguments.
+* Priority-based resolution of conflicting aspect values.
+* Simplified code that only considers main data flows.

@@ -2,31 +2,31 @@ import pyfop as pfp
 import numpy as np
 
 
-@pfp.forward
+@pfp.lazy
 def tautology(x):
     return x
 
 
-@pfp.forward
+@pfp.lazy
 def normalize(x, norm=pfp.Aspect(2)):
     return x / (np.sum(x**norm))**(1./norm)
 
 
-@pfp.forward
+@pfp.lazy
 def offset(x):
     return x+np.eps()
 
 
-@pfp.forward
+@pfp.lazy
 def dot(x, y):
     return np.sum(x*y)
 
 
-@pfp.forward
-def KLdivergence(x, y, norm=pfp.Aspect(1)):
+@pfp.lazy
+def KLdivergence(x, y, norm=pfp.Aspect(1), epsilon=pfp.Aspect(np.finfo(float).eps)):
     if norm != 1:
-        raise Exception("KLDivergence should not work on L1 normalization")
-    return np.sum(x*np.log(x/y))
+        raise Exception("KLDivergence should not work on non-L1 normalizations")
+    return np.sum(-x*np.log(x/(y+epsilon)+epsilon))
 
 
 class Similarity:
@@ -42,5 +42,4 @@ class Similarity:
 x = np.array([1., 1., 1.])
 y = np.array([1., 1., 1.])
 
-print(Similarity(tautology, dot, norm=2)(x, y))
-
+print(Similarity(normalize, KLdivergence, norm=1, epsilon=0)(x, y))
