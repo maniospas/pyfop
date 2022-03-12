@@ -12,8 +12,8 @@ class PendingCall:
         self.args = args
         self.kwargs = kwargs
 
-    def __call__(self, aspects=None, **kwargs):
-        return self.call(aspects, **kwargs)
+    def __call__(self, **kwargs):
+        return self.call(**kwargs)
 
     def call(self, **kwargs):
         context = Context()

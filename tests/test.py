@@ -59,6 +59,14 @@ def test_unused_imports():
         increment(increment(1), 2).call(inc=3)
 
 
+def test_unused_imports():
+    @pfp.lazy
+    def increment(x, inc=pfp.Aspect(1)):
+        return x + inc
+    with pytest.raises(Exception):
+        increment(increment(1)).call(incr=3)
+
+
 def test_priority_comparison():
     @pfp.lazy
     def increment(x, inc=pfp.Aspect(7, priority=pfp.Priority.INCREASED)):
@@ -97,7 +105,8 @@ def test_scope_escaping():
         return measure(normalizer(x, **kwargs), normalizer(y, **kwargs)).call()
 
     def similarity2(x, y, measure, **kwargs):
-        return measure(normalizer(x), normalizer(y)).call(**kwargs)
+        result = measure(normalizer(x), normalizer(y))
+        return result(**kwargs)
 
     x = np.array([1., 1., 1.])
     y = np.array([1., 1., 1.])
@@ -159,3 +168,18 @@ def test_class_initialization():
 
     test_obj = Tester(2)
     assert test_obj.call(scale=2.).apply().apply().x == 0.5
+
+
+def test_eager():
+    @pfp.lazy
+    def add(x, permutation=pfp.Aspect(1)):
+        return x + permutation
+
+    @pfp.eager
+    def mult(x, permutation=pfp.Aspect(2)):
+        return x * permutation
+
+    intermediate = add(1, 3)
+    with pytest.raises(Exception):
+        mult(intermediate, 4)  # different values for permutation aspect
+    assert mult(intermediate) == 12

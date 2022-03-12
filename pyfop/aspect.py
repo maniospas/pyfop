@@ -22,10 +22,6 @@ class Aspect:
         return context.get(self.name)
 
 
-def _isaspect(val):
-    return isinstance(val, Aspect)
-
-
 def _name(arg, val):
     return val.name if isinstance(val, Aspect) else arg
 
@@ -46,8 +42,8 @@ class Context:
 
     def add(self, arg, val, default_priority=Priority.HIGH, is_default=False):
         arg = _name(arg, val)
-        if arg is None and _isaspect(val):
-            val.name = arg
+        #if arg is None and isinstance(val, Aspect): # TODO: enable to remove some redundant execution.py code
+        #    val.name = arg
         priority_diff = self.priorities.get(arg, Priority.LOW).value - _priority(val, default_priority).value
         if priority_diff <= 0:
             if priority_diff == 0 and arg in self.values and self.values[arg] != _value(arg, val):
