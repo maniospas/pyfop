@@ -5,7 +5,7 @@ A novel forward-oriented programming paradigm for Python.
 **Developer:** Emmanouil (Manios) Krasanakis<br/>
 **Contant:** maniospas@hotmail.com
 
-## About
+# :brain: About
 `pyfop` is a package that introduces the concept
 of forward-oriented programming in Python. This
 aims to simplify component-based development by
@@ -16,6 +16,12 @@ static annotations are used to mark variables
 as aspects spanning multiple components whose 
 values are automatically retrieved, initialized 
 and exchanged.
+
+# :fire: Features
+* Simplified code that only considers main data flows.
+* Value sharing between aspect arguments.
+* Non-intrusive programming interface (minimal changes to code).
+* Priority-based resolution of conflicting aspect values.
 
 # :zap: Quickstart
 Overall, there are three steps to using the library:
@@ -125,9 +131,3 @@ the normalization aspect to KLdivergence and check for the
 shared value. For example, adding a `norm=2` argument to the
 previous command will throw an error.
 
-
-# :fire: Features
-* Non-intrusive programming interface (minimal changes to code).
-* Value sharing between aspect arguments.
-* Priority-based resolution of conflicting aspect values.
-* Simplified code that only considers main data flows.
