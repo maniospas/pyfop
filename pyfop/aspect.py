@@ -18,6 +18,10 @@ class Aspect:
             priority = Priority.IGNORE if default is None else Priority.NORMAL
         self.priority = priority
 
+    def alias(self, name):
+        self.name = name
+        return self
+
     def _call(self, context):
         return context.get(self.name)
 
@@ -61,8 +65,8 @@ class Context:
             self.add(arg, val, default_priority, is_default)
 
     def get(self, arg):
-        self.usages[arg] += 1
-        return self.values[arg]
+        self.usages[arg] = self.usages.get(arg, 0) + 1
+        return self.values.get(arg, None)
 
     def catch_unused(self):
         for arg, usage in self.usages.items():

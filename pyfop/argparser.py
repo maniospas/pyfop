@@ -7,7 +7,18 @@ def parse_defaults(method):
 
 
 def parse_positional(method, args):
-    return {arg: val for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args)}
+    ret = dict()
+    method_args = list(inspect.signature(method).parameters)
+    method_args_pos = 0
+    unnamed = list()
+    for val in args:
+        if method_args[method_args_pos] == "args":
+            unnamed.append(val)
+        else:
+            ret[method_args[method_args_pos]] = val
+            method_args_pos += 1
+    return ret, unnamed
+    #return {arg: val for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args)}
 
 
 def combine(*kwarg_list):

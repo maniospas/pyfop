@@ -23,7 +23,7 @@ def dot(x, y):
 
 
 @pfp.lazy
-def KLdivergence(x, y, norm=pfp.Aspect(1), epsilon=pfp.Aspect(np.finfo(float).eps)):
+def KLdivergence(x, y, norm=pfp.Aspect(1), epsilon=pfp.Aspect(0.001)):
     if norm != 1:
         raise Exception("KLDivergence should not work on non-L1 normalizations")
     return np.sum(-x*np.log(x/(y+epsilon)+epsilon))
@@ -41,5 +41,4 @@ class Similarity:
 
 x = np.array([1., 1., 1.])
 y = np.array([1., 1., 1.])
-
 print(Similarity(normalize, KLdivergence, norm=1, epsilon=0)(x, y))

@@ -183,3 +183,21 @@ def test_eager():
     with pytest.raises(Exception):
         mult(intermediate, 4)  # different values for permutation aspect
     assert mult(intermediate) == 12
+
+
+def test_easifier():
+    import numpy as np
+
+    x = np.array([[1., 1., 1.], [2., 2., 2.]])
+    y = np.array([[1., 1., 1.], [2., 2., 2.]])
+
+    desired = np.sum(x, axis=0) + np.mean(y, axis=0)
+
+    with pfp.Lazifier() as lazifier:
+        lazifier.lazify(np.sum)
+        lazifier.lazify(np.mean)
+        r1 = np.sum(x, axis=pfp.Aspect())
+        r2 = np.mean(y, axis=pfp.Aspect())
+    assert str((r1 + r2).call(axis=0)) == str(desired)
+    assert np.sum(x) == 9
+
