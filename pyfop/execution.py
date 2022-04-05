@@ -1,5 +1,6 @@
 from pyfop.aspect import Aspect, Context, Priority
 import pyfop.argparser as argparser
+from functools import wraps
 
 
 def _isfop(val):
@@ -45,6 +46,7 @@ class PendingCall:
         self._gather_aspects(context)
         ret = self._call(context)
         if isinstance(ret, PendingCall):
+            ret._gather_aspects(context)
             ret = ret._call(context)
         context.catch_unused()
         return ret
@@ -83,19 +85,15 @@ class PendingCall:
 
 def lazy(method):
     def wrapper(*args, **kwargs):
+        wraps(method)
         return PendingCall(method, *args, **kwargs)
-    wrapper.__name__ = method.__name__
-    if hasattr(method, "__module__"):
-        wrapper.__module__ = method.__module__
     return wrapper
 
 
 def eager(method):
     def wrapper(*args, **kwargs):
+        wraps(method)
         return PendingCall(method, *args, **kwargs).call()
-    wrapper.__name__ = method.__name__
-    if hasattr(method, "__module__"):
-        wrapper.__module__ = method.__module__
     return wrapper
 
 

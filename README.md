@@ -22,10 +22,11 @@ values are automatically retrieved, initialized
 and exchanged.
 
 # :fire: Features
-* Simplified code that only considers main data flows.
-* Value sharing between aspect arguments.
-* Non-intrusive programming interface (minimal changes to code).
-* Priority-based resolution of conflicting aspect values.
+* Simplified code that considers only main data flows.
+* Value sharing between arguments.
+* Non-intrusive API (minimal changes to code).
+* Priority-based conflict resolution.
+* Scoped method modification.
 
 # :zap: Quickstart
 Overall, there are three steps to using the library:
