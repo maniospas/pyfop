@@ -1,5 +1,6 @@
 from pyfop.aspect import Aspect, Priority
 from pyfop.execution import lazy, eager
+from pyfop.utils import memoization, autoaspects
 import sys
 
 

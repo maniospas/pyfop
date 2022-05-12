@@ -185,7 +185,20 @@ def test_eager():
     assert mult(intermediate) == 12
 
 
-def test_easifier():
+def test_eager_custom():
+    @pfp.lazy
+    def add(x, permutation=pfp.Aspect()):
+        return x + permutation
+
+    @pfp.eager
+    def mult(x, permutation=pfp.Aspect()):
+        return x * permutation
+
+    assert mult(add(1, 3)) == 12
+    assert mult(add(1), 3) == 12
+
+
+def test_lazifier():
     import numpy as np
 
     x = np.array([[1., 1., 1.], [2., 2., 2.]])
@@ -201,3 +214,80 @@ def test_easifier():
     assert str((r1 + r2).call(axis=0)) == str(desired)
     assert np.sum(x) == 9
 
+
+def test_immutability_operations():
+    @pfp.lazy
+    @pfp.memoization
+    def increment(x, inc=pfp.Aspect(7, priority=pfp.Priority.INCREASED)):
+        return x + inc
+
+    @pfp.lazy
+    def increment2(x, inc=pfp.Aspect(11, priority=pfp.Priority.LOW)):
+        return x + inc
+
+    assert increment(increment2(0)).call() == 14
+    assert increment2(increment(0)).call() == 14
+    assert increment2(increment(0)).call(inc=2) == 4
+    assert increment(increment(0)).call(inc=1) == 2
+
+
+def test_immutability_persistent():
+
+    @pfp.lazy
+    @pfp.autoaspects
+    def increment(x, inc=7):
+        return x + inc
+
+    @pfp.lazy
+    def increment2(x, inc=pfp.Aspect(11, priority=pfp.Priority.LOW)):
+        return x + inc
+
+    assert increment(increment2(0)).call() == 14
+    assert increment2(increment(0)).call() == 14
+    assert increment2(increment(0)).call(inc=2) == 4
+    assert increment(increment(0)).call(inc=1) == 2
+
+    """
+    
+    
+    @pfp.lazy
+    @pfp.immutable
+    def value2list(value=pfp.Aspect(7)):
+        return [value]
+
+    @pfp.lazy
+    def value2list_nonimmutable(value=pfp.Aspect(7)):
+        return [value]
+
+    assert id(value2list().call()) == id(value2list().call())
+    assert id(value2list(2).call()) == id(value2list(2).call())
+    assert id(value2list().call(value=2)) == id(value2list().call(value=2))
+    assert id(value2list(3).call()) != id(value2list(2).call())
+    assert id(value2list_nonimmutable(2).call()) != id(value2list_nonimmutable(2).call())
+    """
+
+def test_autoaspects():
+    @pfp.lazy
+    class Tester:
+        @pfp.autoaspects
+        def __init__(self, x, scale=1):
+            self.x = x
+            self.scale = scale
+
+        def apply(self):
+            self.x /= self.scale
+            return self
+
+    test_obj = Tester(2)
+    assert test_obj.call(scale=2.).apply().apply().x == 0.5
+
+
+def test_eager_autoaspect_memoization():
+    @pfp.eager
+    @pfp.memoization
+    @pfp.autoaspects
+    def zeros(length=10):
+        return [0] * length
+
+    assert id(zeros(9)) != id(zeros(10))
+    assert id(zeros(10)) == id(zeros(10))

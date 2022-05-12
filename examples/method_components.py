@@ -3,7 +3,7 @@ import numpy as np
 
 
 @lazy
-def tautology(x):
+def tautology(x, norm=Aspect(0, Priority.CRITICAL)):
     return x
 
 
@@ -40,6 +40,5 @@ class Similarity:
 
 
 x = np.array([1., 1., 1.])
-#y = np.array([1., 1., 1.])
 y = np.array([1., 0., 1.])
 print(Similarity(normalize, KLdivergence, norm=1, epsilon=Aspect())(x, y))

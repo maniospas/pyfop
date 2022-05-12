@@ -24,7 +24,7 @@ and exchanged.
 # :fire: Features
 * Simplified code that considers only main data flows.
 * Value sharing between arguments.
-* Non-intrusive API (minimal changes to code).
+* Non-intrusive API (minimal changes to source code).
 * Priority-based conflict resolution.
 * Scoped method modification.
 
@@ -134,5 +134,80 @@ print(Comparator(normalize, KLdivergence, epsilon=0)(x, y))
 `pyfop` makes error checking trivial; we just needed to add
 the normalization aspect to KLdivergence and check for the
 shared value. For example, adding a `norm=2` argument to the
-previous command will throw an error.
+previous command will throw an error. There is no need for
+conditional checks at other parts of the code.
+
+
+# :hammer_and_wrench: Functionalities
+Making a method lazily execute can be achieved with the `@pyfop.lazy` decorator.
+Aspect variables are assigned as `pfp.Aspect` variables. These can have a 
+default value. Aspect values can change after lazy methods are first called.
+
+```python
+import pyfop as pfp
+
+@pfp.lazy
+def increase(x, inc=pfp.Aspect(1)):
+    return x + inc
+
+y = increase(2)
+assert y.call() == 3
+assert y.call(inc=2) == 4
+```
+
+For minimal intrusiveness, a `@pyfop.aytoaspects` is provided
+can turn all default arguments into aspects. In the above snippet,
+the method definition could change to the one bellow. 
+Note that lazy decorators should remain the topmost ones.
+
+```python
+@pfp.lazy
+@pfp.autoaspects
+def increase(x, inc=1):
+    return x + inc
+```
+
+Memoization is supported to prevent lazy calls from re-running
+for the exact same inputs. This could considerably speed up
+reuse of execution outcomes but for the time being has no
+way of freeing up memory other than deleting the memoized
+method.
+Note that lazy decorators should remain the topmost ones.
+
+```python
+import pyfop as pfp
+
+@pfp.eager
+@pfp.memoization
+@pfp.autoaspects
+def zeros(length=10):
+    return [0] * length
+    
+assert id(zeros(9)) != id(zeros(10))  # different list object
+assert id(zeros(10)) == id(zeros(10))   # same list instance
+del zeros  # free up mememory
+```
+
+In the above example, the `@pyfop.eager` decorator defines
+immediately runnable methods that support lazy execution arguments.
+Calling methods decorated this way is equivalent 
+to calling the `call()` method immediately. 
+All aspects should somehow obtain values at least once,
+either via defaults or through normal pythonic argument parsing.
+
+```python
+import pyfop as pfp
+
+@pfp.lazy
+def add(x, permutation=pfp.Aspect()):
+    return x + permutation
+
+@pfp.eager
+def mult(x, permutation=pfp.Aspect()):
+    return x * permutation
+
+assert mult(add(1, 3)) == 12
+assert mult(add(1), 3) == 12
+```
+
 
