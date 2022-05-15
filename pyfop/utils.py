@@ -1,6 +1,6 @@
 import uuid
 from functools import update_wrapper
-from pyfop.argparser import parse_defaults
+from pyfop.execution import PendingCall
 from pyfop.aspect import Aspect, Priority
 from inspect import signature, Parameter
 from makefun import wraps, add_signature_parameters, remove_signature_parameters
@@ -51,7 +51,9 @@ def autoaspects(method):
             new_params.append(Parameter(value.name, value.kind, default=value.default))
         else:
             new_params.append(Parameter(value.name, value.kind,
-                              default=Aspect(value.default, Priority.NORMAL) if not isinstance(value.default, Aspect) else value.default))
+                              default=Aspect(value.default, Priority.NORMAL)
+                              if not isinstance(value.default, Aspect) and not isinstance(value.default, PendingCall)
+                              else value.default))
 
     @wraps(method, new_sig=params.replace(parameters=new_params))
     def wrapper(*args, **kwargs):

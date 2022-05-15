@@ -1,9 +1,9 @@
-from pyfop import lazy, Aspect, Priority
+from pyfop import lazy, autoaspects, Aspect, Priority
 import numpy as np
 
 
 @lazy
-def tautology(x, norm=Aspect(0, Priority.CRITICAL)):
+def tautology(x):
     return x
 
 
@@ -13,17 +13,13 @@ def normalize(x, norm=Aspect(2, Priority.LOW)):
 
 
 @lazy
-def offset(x):
-    return x+np.eps()
-
-
-@lazy
 def dot(x, y):
     return np.sum(x*y)
 
 
 @lazy
-def KLdivergence(x, y, norm=Aspect(1), epsilon=Aspect(np.finfo(float).eps)):
+@autoaspects
+def KLdivergence(x, y, norm=1, epsilon=np.finfo(float).eps):
     if norm != 1:
         raise Exception("KLDivergence should not work on non-L1 normalizations")
     return np.sum(x*np.log(x/(y+epsilon)+epsilon))
