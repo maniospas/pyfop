@@ -1,6 +1,7 @@
 from pyfop.aspect import Aspect, Context, Priority
 import pyfop.argparser as argparser
 from functools import wraps
+from pyfop.cache import cache
 
 
 def _isfop(val):
@@ -8,16 +9,19 @@ def _isfop(val):
 
 
 class PendingCall:
-    def __init__(self, method, *args, **kwargs):
-        self.method = method
+    def __init__(self, _pyfop_method, *args, **kwargs):
+        self.method = _pyfop_method
         self.args = args
         self.kwargs = kwargs
-        #if hasattr(method, "__dict__"):
-        #    for attribute, value in method.__dict__.items():
-        #        if callable(value) and attribute != "__init__" and attribute != "__new__":
-        #            self.__dict__[attribute] = lazy(value)
-        #        else:
-        #            self.__dict__[attribute] = value
+
+    def __getattribute__(self, name):
+        if name in ["method", "args", "kwargs"] or name in dir(PendingCall):
+            return object.__getattribute__(self, name)
+
+        def future_method(*args, fop_method_result, **kwargs):
+            return getattr(fop_method_result, name)(*args, **kwargs)
+
+        return lazy(future_method, fop_method_result=self)
 
     def __add__(self, other):
         return add(self, other)
@@ -83,16 +87,18 @@ class PendingCall:
         return self.method(*unnamed, **kwargs)
 
 
-def lazy(method):
+def lazy(method, *supplementary_args, **supplementary_kwargs):
+    method = cache(method)
+    @wraps(method)
     def wrapper(*args, **kwargs):
-        wraps(method)
-        return PendingCall(method, *args, **kwargs)
+        return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
     return wrapper
 
 
 def eager(method):
+    method = cache(method)
+    @wraps(method)
     def wrapper(*args, **kwargs):
-        wraps(method)
         return PendingCall(method, *args, **kwargs).call()
     return wrapper
 

@@ -71,5 +71,5 @@ class Context:
     def catch_unused(self):
         for arg, usage in self.usages.items():
             if usage == 0:
-                raise Exception("Unused argument: "+arg)
+                raise Exception("Unused argument: "+arg+" (no aspect with such name)")
         pass

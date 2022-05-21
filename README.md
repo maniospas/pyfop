@@ -178,8 +178,8 @@ Note that lazy decorators should remain the topmost ones.
 import pyfop as pfp
 
 @pfp.eager
-@pfp.memoization
 @pfp.autoaspects
+@pfp.memoization
 def zeros(length=10):
     return [0] * length
     

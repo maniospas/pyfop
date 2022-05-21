@@ -1,6 +1,7 @@
 from pyfop.aspect import Aspect, Priority
 from pyfop.execution import lazy, eager
-from pyfop.utils import memoization, autoaspects
+from pyfop.utils import autoaspects
+from pyfop.cache import CacheScope
 import sys
 
 
@@ -13,10 +14,19 @@ class Lazifier(object):
         for method in self.mapper.values():
             setattr(sys.modules[method.__module__], method.__name__, method)
 
-    def lazify(self, method):
+    def __call__(self, *args, auto=True, memoize=False):
+        for method in args:
+            return self.lazify(method, auto, memoize)
+
+    def lazify(self, method, auto=True, memoize=False):
         if method in self.mapper:
             raise Exception("Cannot lazified an already lazified method")
-        ret = lazy(method)
+        ret = method
+        if memoize:
+            ret = memoization(ret)
+        if auto:
+            ret = autoaspects(ret)
+        ret = lazy(ret)
         self.mapper[ret] = method
         setattr(sys.modules[method.__module__], method.__name__, ret)
         return ret
