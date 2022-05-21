@@ -313,6 +313,7 @@ def test_cache_scope():
 
     assert id1 != id(zeros(10))
 
+
 def test_lazy_defaults():
     @pfp.lazy
     class Convergence:

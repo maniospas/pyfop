@@ -12,21 +12,18 @@ A novel forward-oriented programming paradigm for Python.
 # :brain: About
 `pyfop` is a package that introduces the concept
 of forward-oriented programming in Python. This
-aims to simplify component-based development by
-sharing parameters across multiple components.
-
-Contrary to typical programming paradigms,
-static annotations are used to mark variables
-as aspects spanning multiple components whose 
-values are automatically retrieved, initialized 
-and exchanged.
+aims to simplify development by
+sharing parameters across multiple components
+and defining those after main business logic
+definition.
 
 # :fire: Features
-* Simplified code that considers only main data flows.
+* Simplified code that focuses on business logic.
 * Value sharing between arguments.
 * Non-intrusive API (minimal changes to source code).
 * Priority-based conflict resolution.
 * Scoped method modification.
+* Cached optimization.
 
 # :zap: Quickstart
 Overall, there are three steps to using the library:
@@ -167,25 +164,29 @@ def increase(x, inc=1):
     return x + inc
 ```
 
-Memoization is supported to prevent lazy calls from re-running
-for the exact same inputs. This could considerably speed up
-reuse of execution outcomes but for the time being has no
-way of freeing up memory other than deleting the memoized
-method.
-Note that lazy decorators should remain the topmost ones.
+Caching (also known as memoization) 
+is automatically supported to prevent lazy calls from re-running
+for the exact same inputs. It is based on object identifiers,
+but it prevents the garbage collector from running on past
+method inputs. To clear the garbage collector after operations,
+these can run withing a cached scope, which is available in the form
+of the context. This can be achieved per the following code:
+
 
 ```python
 import pyfop as pfp
 
 @pfp.eager
 @pfp.autoaspects
-@pfp.memoization
 def zeros(length=10):
     return [0] * length
-    
-assert id(zeros(9)) != id(zeros(10))  # different list object
-assert id(zeros(10)) == id(zeros(10))   # same list instance
-del zeros  # free up mememory
+
+with pfp.CacheScope():
+    id1 = id(zeros(10))
+    assert id1 == id(zeros(10))
+
+assert id1 != id(zeros(10))
+
 ```
 
 In the above example, the `@pyfop.eager` decorator defines
