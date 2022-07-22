@@ -14,25 +14,50 @@ class PendingCall:
         self.args = args
         self.kwargs = kwargs
 
+
     def __getattribute__(self, name):
         if name in ["method", "args", "kwargs"] or name in dir(PendingCall):
             return object.__getattribute__(self, name)
 
         def future_method(*args, fop_method_result, **kwargs):
-            return getattr(fop_method_result, name)(*args, **kwargs)
+            attr = getattr(fop_method_result, name)
+            if callable(attr):
+                return attr(*args, **kwargs)
+            else:
+                if args or kwargs:
+                    raise Exception("Do not provide arguments when casting attributes.")
+                return attr
 
         return lazy(future_method, fop_method_result=self)
+
+    def __getitem__(self, item):
+        return getitem(self, item)
+
+    def __setitem__(self, key, value):
+        return setitem(self, key, value)
 
     def __add__(self, other):
         return add(self, other)
 
+    def __radd__(self, other):
+        return add(other, self)
+
+    def __mul__(self, other):
+        return mul(self, other)
+
+    def __rmul__(self, other):
+        return mul(other, self)
+
     def __sub__(self, other):
         return sub(self, other)
+
+    def __rsub__(self, other):
+        return sub(other, self)
 
     def __abs__(self):
         return _abs(self)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         return div(self, other)
 
     def __rdiv__(self, other):
@@ -41,8 +66,30 @@ class PendingCall:
     def __pow__(self, other):
         return pow(self, other)
 
+    def __equals__(self, other):
+        return equals(self, other)
+
+    def __gt__(self, other):
+        return gt(self, other)
+
+    def __lt__(self, other):
+        return lt(self, other)
+
+    def __ge__(self, other):
+        return gt(self, other)
+
+    def __le__(self, other):
+        return lt(self, other)
+
     def __call__(self, **kwargs):
         return self.call(**kwargs)
+
+    def get_input_context(self, **kwargs):
+        context = Context()
+        context.extend(kwargs, Priority.HIGH)
+        self._gather_aspects(context)
+        context.catch_unused()
+        return context
 
     def call(self, **kwargs):
         context = Context()
@@ -89,6 +136,14 @@ class PendingCall:
 
 def lazy(method, *supplementary_args, **supplementary_kwargs):
     method = cache(method)
+
+    @wraps(method)
+    def wrapper(*args, **kwargs):
+        return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
+    return wrapper
+
+
+def lazy_no_cache(method, *supplementary_args, **supplementary_kwargs):
     @wraps(method)
     def wrapper(*args, **kwargs):
         return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
@@ -97,15 +152,39 @@ def lazy(method, *supplementary_args, **supplementary_kwargs):
 
 def eager(method):
     method = cache(method)
+
     @wraps(method)
     def wrapper(*args, **kwargs):
         return PendingCall(method, *args, **kwargs).call()
     return wrapper
 
 
+def _lazy_attribute_calls_to_attributes(x, y):
+    if isinstance(x, PendingCall):
+        x = x()
+    if isinstance(y, PendingCall):
+        y = y()
+    return x, y
+
+
+@lazy
+def getitem(x, i):
+    return x[i]
+
+
+@lazy
+def setitem(x, i, v):
+    x[i] = v
+
+
 @lazy
 def add(x, y):
     return x + y
+
+
+@lazy
+def mul(x, y):
+    return x * y
 
 
 @lazy
@@ -121,6 +200,32 @@ def pow(x, y):
 @lazy
 def sub(x, y):
     return x - y
+
+
+@lazy
+def equals(x, y):
+    return x == y
+
+
+@lazy
+def gt(x, y):
+    return x > y
+
+
+@lazy
+def lt(x, y):
+    return x < y
+
+
+
+@lazy
+def ge(x, y):
+    return x >= y
+
+
+@lazy
+def le(x, y):
+    return x <= y
 
 
 @lazy

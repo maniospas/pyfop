@@ -134,6 +134,23 @@ shared value. For example, adding a `norm=2` argument to the
 previous command will throw an error. There is no need for
 conditional checks at other parts of the code.
 
+As a final remark, lazy execution employs caching to prevent
+leaks in large programs that reuse the same methods. This
+keeps references to all method input arguments that prevent
+the garbage collector from destroying objcets no longer in
+memory. Leaks can be
+avoided by generating cache scope contexts, in which lazy evaluations
+are not recomputed for the same arguments, but which will allow the 
+garbage collector to run upon exit. For example, the previous
+call could run in a cache scope per:
+
+```python
+from pyfop import CacheScope
+
+with CacheScope():
+    print(Comparator(normalize, KLdivergence, epsilon=0)(x, y))
+```
+
 
 # :hammer_and_wrench: Functionalities
 Making a method lazily execute can be achieved with the `@pyfop.lazy` decorator.
@@ -186,14 +203,13 @@ with pfp.CacheScope():
     assert id1 == id(zeros(10))
 
 assert id1 != id(zeros(10))
-
 ```
 
 In the above example, the `@pyfop.eager` decorator defines
 immediately runnable methods that support lazy execution arguments.
 Calling methods decorated this way is equivalent 
-to calling the `call()` method immediately. 
-All aspects should somehow obtain values at least once,
+to calling lazy executions without arguments. 
+All aspects should obtain values at least once,
 either via defaults or through normal pythonic argument parsing.
 
 ```python
@@ -211,4 +227,7 @@ assert mult(add(1, 3)) == 12
 assert mult(add(1), 3) == 12
 ```
 
+As a final remark on caching, you can also use the
+decorator `@pyfop.lazy_no_cache` to prevent caching
+for specific functions.
 
