@@ -90,9 +90,6 @@ class PendingCall:
     def __call__(self, **kwargs):
         return self.call(**kwargs)
 
-    def __len__(self):
-        return length(self)
-
     def get_input_context(self, **kwargs):
         context = Context()
         context.extend(kwargs, Priority.HIGH)
@@ -173,23 +170,19 @@ def eager(method):
         return PendingCall(method, *args, **kwargs).call()
     return wrapper
 
-
+"""
 def _lazy_attribute_calls_to_attributes(x, y):
     if isinstance(x, PendingCall):
         x = x()
     if isinstance(y, PendingCall):
         y = y()
     return x, y
+"""
 
 
 @lazy
 def neg(x):
     return -x
-
-
-@lazy
-def length(x):
-    return len(x)
 
 
 @lazy

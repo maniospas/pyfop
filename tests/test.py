@@ -320,6 +320,14 @@ def test_autoaspects():
     assert test_obj.call(scale=2.).apply().apply().x == 0.5
 
 
+def test_lazy_lists():
+    @pfp.lazy
+    @pfp.autoaspects
+    def zeros(length=10, default=0):
+        return [default] * length
+    assert zeros()[0](default=1) == 1
+
+
 def test_eager_autoaspect_cache():
     @pfp.eager
     @pfp.autoaspects
