@@ -90,11 +90,13 @@ class PendingCall:
     def __call__(self, **kwargs):
         return self.call(**kwargs)
 
+    def __len__(self):
+        return length(self)
+
     def get_input_context(self, **kwargs):
         context = Context()
         context.extend(kwargs, Priority.HIGH)
         self._gather_aspects(context)
-        context.catch_unused()
         return context
 
     def call(self, **kwargs):
@@ -183,6 +185,11 @@ def _lazy_attribute_calls_to_attributes(x, y):
 @lazy
 def neg(x):
     return -x
+
+
+@lazy
+def length(x):
+    return len(x)
 
 
 @lazy

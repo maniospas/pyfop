@@ -44,12 +44,30 @@ def test_aspect_default():
     assert increment(1).call() == 4
 
 
+def test_input_context_detection():
+    @pfp.lazy
+    def increment(x, inc=pfp.Aspect(3)):
+        return x + inc
+
+    @pfp.lazy
+    def scale(x, slope=pfp.Aspect(2)):
+        return x*slope
+
+    assert 'inc' in increment(scale(1)).get_input_context()
+    assert 'slope' in increment(scale(1)).get_input_context()
+    assert 'unknown' not in increment(scale(1)).get_input_context()
+    assert increment(scale(1)).get_input_context(slope=4)['slope'] == 4
+    assert "value: 2" in str(increment(scale(1)).get_input_context())
+    assert "value: 3" in str(increment(scale(1)).get_input_context(slope=5))
+    assert "value: 5" in str(increment(scale(1)).get_input_context(slope=5))
+
+
 def test_aspect_default_operations():
     @pfp.lazy
     def strange(x, inc=pfp.Aspect(3)):
         return x+inc
 
-    y1 = (strange(1)*2 + 1) / 3 == 3
+    y1 = abs((strange(1)*2 + 1) / 3-6) == 3
     assert y1.call()
     with pytest.raises(Exception):
         assert (not y1).call(inc=2)  # assert error check for not converting to bool

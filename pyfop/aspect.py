@@ -73,3 +73,19 @@ class Context:
             if usage == 0:
                 raise Exception("Unused argument: "+arg+" (no aspect with such name)")
         pass
+
+    def __iter__(self):
+        for item in self.values:
+            yield item, self.values[item], self.priorities[item], self.usages[item]
+
+    def __contains__(self, item):
+        return item in self.values
+
+    def __getitem__(self, item):
+        return self.values[item]
+
+    def __str__(self):
+        ret = "context:"
+        for item, value, priority, usage in self.__iter__():
+            ret += f"\n\t- {item}:\n\t\t value: {value},\n\t\t priority: {priority}\n\t\t usage: {usage}"
+        return ret
