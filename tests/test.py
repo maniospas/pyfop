@@ -19,6 +19,15 @@ def test_simple_call():
     assert increment(increment(1)).call() == 3
 
 
+def test_simple_call():
+    @pfp.lazy
+    def increment(x):
+        return x + 1
+
+    assert increment(1).call() == 2
+    assert increment(increment(1)).call() == 3
+
+
 def test_aspect_nameless():
     @pfp.lazy
     def increment(x, inc=pfp.Aspect()):
@@ -33,6 +42,17 @@ def test_aspect_default():
         return x + inc
 
     assert increment(1).call() == 4
+
+
+def test_aspect_default_operations():
+    @pfp.lazy
+    def strange(x, inc=pfp.Aspect(3)):
+        return x+inc
+
+    y1 = (strange(1)*2 + 1) / 3 == 3
+    assert y1.call()
+    with pytest.raises(Exception):
+        assert (not y1).call(inc=2)  # assert error check for not converting to bool
 
 
 def test_multi_call():
@@ -64,15 +84,6 @@ def test_unused_imports():
 
     with pytest.raises(Exception):
         increment(increment(1), 2).call(inc=3)
-
-
-def test_unused_imports():
-    @pfp.lazy
-    def increment(x, inc=pfp.Aspect(1)):
-        return x + inc
-
-    with pytest.raises(Exception):
-        increment(increment(1)).call(incr=3)
 
 
 def test_priority_comparison():
@@ -299,6 +310,25 @@ def test_eager_autoaspect_cache():
 
     assert id(zeros(9)) != id(zeros(10))
     assert id(zeros(10)) == id(zeros(10))
+
+
+def test_eager_no_cache():
+    @pfp.eager_no_cache
+    @pfp.autoaspects
+    def zeros(length=10):
+        return [0] * length
+
+    assert id(zeros(9)) != id(zeros(10))
+    assert id(zeros(10)) != id(zeros(10))
+
+
+def test_lazy_no_cache():
+    @pfp.lazy_no_cache
+    @pfp.autoaspects
+    def zeros(length=10):
+        return [0] * length
+    assert id(zeros()(length=9)) != id(zeros()(length=10))
+    assert id(zeros()(length=10)) != id(zeros()(length=10))
 
 
 def test_cache_scope():

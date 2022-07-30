@@ -9,6 +9,7 @@ class Uniform:
         self.a = a
         self.b = b
         self.rng = np.random.default_rng(seed)
+        print(b)
 
     def random(self):
         return self.rng.random() * (self.b - self.a) + self.a
@@ -22,6 +23,7 @@ def integrate(f, distribution=Uniform(), samples=100000):
 
 pi = 4*integrate(lambda x: (1-x**2)**0.5)
 print(pi(samples=5000000))
+
 
 @lazy
 def gamma(n, integrate=integrate, seed=Aspect(0, Priority.INCREASED), b=Aspect(100, Priority.HIGH)):

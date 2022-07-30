@@ -66,7 +66,7 @@ class PendingCall:
     def __pow__(self, other):
         return pow(self, other)
 
-    def __equals__(self, other):
+    def __eq__(self, other):
         return equals(self, other)
 
     def __gt__(self, other):
@@ -80,6 +80,12 @@ class PendingCall:
 
     def __le__(self, other):
         return lt(self, other)
+
+    def __neg__(self):
+        return neg(self)
+
+    def __bool__(self):
+        raise Exception("Python does not support boolean operation overriding to replace them with FOP")
 
     def __call__(self, **kwargs):
         return self.call(**kwargs)
@@ -150,6 +156,13 @@ def lazy_no_cache(method, *supplementary_args, **supplementary_kwargs):
     return wrapper
 
 
+def eager_no_cache(method):
+    @wraps(method)
+    def wrapper(*args, **kwargs):
+        return PendingCall(method, *args, **kwargs).call()
+    return wrapper
+
+
 def eager(method):
     method = cache(method)
 
@@ -165,6 +178,11 @@ def _lazy_attribute_calls_to_attributes(x, y):
     if isinstance(y, PendingCall):
         y = y()
     return x, y
+
+
+@lazy
+def neg(x):
+    return -x
 
 
 @lazy
