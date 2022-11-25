@@ -5,18 +5,44 @@ from pyfop.cache import cache
 
 
 def _isfop(val):
-    return isinstance(val, Aspect) or isinstance(val, PendingCall)
+    return isinstance(val, Aspect) or isinstance(val, PendingCall) or isinstance(val, Generator)
+
+
+class Generator:
+    def __init__(self, var):
+        assert isinstance(var, PendingCall)
+        self.method = var
+
+    def _call(self, context):
+        positional, unnamed = argparser.parse_positional(self.method.method, self.method.args)
+        kwargs = argparser.combine(argparser.parse_defaults(self.method.method),
+                                   positional,
+                                   self.method.kwargs)
+        for arg, val in kwargs.items():
+            if isinstance(arg, Aspect):
+                val.name = arg
+        # print(self.method.__name__, kwargs)
+        unnamed = [val._call(context) if _isfop(val) else val for val in unnamed]
+        kwargs = {arg: val._call(context) if _isfop(val) else val for arg, val in kwargs.items()}
+        return PendingCall(self.method.method, *unnamed, **kwargs, supercontext=context)
+
+    def call(self, **kwargs):
+        raise Exception("pyfop.Generator instances can only be passed to @lazy methods")
+
+    def _gather_aspects(self, context):
+        self.method._gather_aspects(context)
 
 
 class PendingCall:
-    def __init__(self, _pyfop_method, *args, **kwargs):
+    def __init__(self, _pyfop_method, *args, supercontext=None, **kwargs):
         self.method = _pyfop_method
         self.args = args
         self.kwargs = kwargs
-
+        self.inject_aspects_to_context = dict()
+        self.supercontext = supercontext  # this is only to be set by the Generator class
 
     def __getattribute__(self, name):
-        if name in ["method", "args", "kwargs"] or name in dir(PendingCall):
+        if name in ["method", "args", "kwargs", "supercontext", "inject_aspects_to_context"] or name in dir(PendingCall):
             return object.__getattribute__(self, name)
 
         def future_method(*args, fop_method_result, **kwargs):
@@ -90,6 +116,9 @@ class PendingCall:
     def __call__(self, **kwargs):
         return self.call(**kwargs)
 
+    def role(self, context_role):
+        return Aspect(self, role=context_role)
+
     def get_input_context(self, **kwargs):
         context = Context()
         context.extend(kwargs, Priority.HIGH)
@@ -104,7 +133,20 @@ class PendingCall:
         if isinstance(ret, PendingCall):
             ret._gather_aspects(context)
             ret = ret._call(context)
-        context.catch_unused()
+        if self.supercontext is None:  # TODO: this is a hack, find an actual fix
+            context.catch_unused()
+        return ret
+
+    def aspects(self, **kwargs):
+        if not kwargs:
+            return self
+        ret = PendingCall(self.method, *self.args, self.supercontext, **self.kwargs)
+        for key, value in kwargs.items():
+            ret.inject_aspects_to_context[key] = Aspect(value, priority=Priority.HIGH)
+        for key, value in kwargs.items():
+            if isinstance(value, PendingCall) and key not in self.kwargs:
+                ret.inject_aspects_to_context = ret.inject_aspects_to_context | value.get_input_context().to_aspects()
+        ret.supercontext = True
         return ret
 
     def _gather_aspects(self, context):
@@ -114,15 +156,26 @@ class PendingCall:
         for arg, val in defaults.items():
             if isinstance(val, Aspect):
                 val.name = arg
-                context.add(arg, kwargs[arg], is_default=True)
+                if isinstance(kwargs[arg], Aspect):
+                    kwargs[arg].name = arg
+                context.add(val.extended_name(), kwargs[arg], is_default=True)
                 kwargs[arg] = val
         for arg, val in kwargs.items():
             if isinstance(val, Aspect):
                 val.name = arg
-                context.add(arg, kwargs[arg], is_default=True)
+                if isinstance(kwargs[arg], Aspect):
+                    kwargs[arg].name = arg
+                context.add(val.extended_name(), kwargs[arg], is_default=True)
                 kwargs[arg] = val
+        for arg, val in self.inject_aspects_to_context.items():
+            if isinstance(val, Aspect):
+                val.name = arg
+                context.add(val.extended_name(), val, is_default=False)
         for val in kwargs.values():
-            if isinstance(val, PendingCall):
+            if isinstance(val, PendingCall) or isinstance(val, Generator):
+                val._gather_aspects(context)
+        for val in self.inject_aspects_to_context.values():
+            if isinstance(val, PendingCall) or isinstance(val, Generator):
                 val._gather_aspects(context)
 
     def _call(self, context):
@@ -131,7 +184,7 @@ class PendingCall:
                                    positional,
                                    self.kwargs)
         for arg, val in kwargs.items():
-            if isinstance(arg, Aspect):
+            if isinstance(val, Aspect):
                 val.name = arg
         # print(self.method.__name__, kwargs)
         unnamed = [val._call(context) if _isfop(val) else val for val in unnamed]

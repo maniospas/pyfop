@@ -14,8 +14,7 @@ A novel forward-oriented programming paradigm for Python.
 of forward-oriented programming in Python. This
 aims to simplify development by
 sharing parameters across multiple components
-and defining those after main business logic
-definition.
+and defining those *after* main business logic.
 
 # :fire: Features
 * Simplified code that focuses on business logic.
@@ -24,6 +23,7 @@ definition.
 * Priority-based conflict resolution.
 * Scoped method modification.
 * Cached optimization.
+* Lazy calls with internal eager calls.
 
 # :zap: Quickstart
 Overall, there are three steps to using the library:
@@ -38,8 +38,8 @@ measures. We will make this system modular by allowing
 combination of various transformation and comparison components.
 
 First, we define a couple of single-input
-array transformation methods `tautology` and `normalize`, 
-as well as two pairwise array comparison methods
+array transformations `tautology` and `normalize`, 
+as well as two pairwise array comparisons
 `dot` and `KLdivergence`. In addition to array inputs,
 some of these methods also make use of optional
 parameter values, such as `norm` to indicate
