@@ -16,14 +16,12 @@ aims to simplify development by
 sharing parameters across multiple components
 and defining those *after* main business logic.
 
-# :fire: Features
-* Simplified code that focuses on business logic.
-* Value sharing between arguments.
-* Non-intrusive API (minimal changes to source code).
+# :rocket: Features
+* Simplified code: focus on business logic.
+* Argument sharing between methods.
+* Minimal changes to functional design.
 * Priority-based conflict resolution.
-* Scoped method modification.
-* Cached optimization.
-* Lazy calls with internal eager calls.
+* Lazy optimization.
 
 # :zap: Quickstart
 Overall, there are three steps to using the library:
@@ -94,7 +92,7 @@ to be used for aspect values. Then, when comparing arrays,
 it runs the lazy execution with these arguments. 
 
 ```python
-class Comparator :
+class Comparator:
     def __init__(self, transform, measure, **kwargs):
         self.transform = transform
         self.measure = measure

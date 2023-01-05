@@ -111,5 +111,5 @@ class Context:
     def __str__(self):
         ret = "context:"
         for item, value, priority, usage in self.__iter__():
-            ret += f"\n\t- {item}:\n\t\t value: {value(**{arg: self.values[arg] for arg in value.get_input_context().values.keys()}) if value.__class__.__name__=='PendingCall' else value},\n\t\t priority: {priority}\n\t\t usage: {usage}"
+            ret += f"\n\t- {item}:\n\t\t value: {value(**{arg: self.values[arg] for arg in value.get_input_context().values.keys()}) if value.__class__.__name__=='PendingCall' else value},\n\t\t priority: {priority}\n\t\t shares: {usage}"
         return ret
