@@ -21,13 +21,12 @@ def builder(method):
     for value in params.parameters.values():
         if hasattr(value.default, "__name__") and value.default.__name__ == '_empty':
             new_params.append(Parameter(value.name, value.kind, default=value.default))
-        elif not isinstance(value.default, Aspect):
-            new_params.append(Parameter(value.name, value.kind, default=value.default))
+        elif isinstance(value.default, Aspect):
+            build_params.append(Parameter(value.name, value.kind, default=value.default))
+        elif isinstance(value.default, Metamethod):
+            build_params.append(Parameter(value.name, value.kind, default=value.default))
         else:
-            build_params.append(Parameter(value.name, value.kind,
-                              default=Aspect(value.default, Priority.NORMAL)
-                              if not isinstance(value.default, Aspect) and not isinstance(value.default, PendingCall)
-                              else value.default))
+            new_params.append(Parameter(value.name, value.kind, default=value.default))
 
     @wraps(method, new_sig=params.replace(parameters=build_params))
     def build(**bkwargs):

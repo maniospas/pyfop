@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="pyfop",
-    version="0.3.1",
+    version="0.3.3",
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description=("A forward-oriented programming paradigm for Python."),

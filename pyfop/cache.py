@@ -32,6 +32,7 @@ class MethodHasher:
         self._method = method
         self._stored = dict()
         _hashers.append(self)
+        # update_wrapper(self, method)  # TODO: this throws an exception
 
     def clear_hashed(self):
         self._stored = dict()
@@ -46,6 +47,4 @@ class MethodHasher:
 
 
 def cache(method):
-    ret = MethodHasher(method)
-    #update_wrapper(ret, method)
-    return ret
+    return MethodHasher(method)
