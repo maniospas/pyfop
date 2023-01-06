@@ -1,5 +1,5 @@
 from pyfop.aspect import Aspect, Priority
-from pyfop.execution import lazy, eager, lazy_no_cache, eager_no_cache, Generator
+from pyfop.execution import lazy, eager, lazy_no_cache, eager_no_cache, meta, Generator
 from pyfop.utils import autoaspects, builder
 from pyfop.cache import CacheScope
 import sys

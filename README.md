@@ -16,39 +16,46 @@ and determines their values *after* the main business logic.
 ## Features
 :alembic: Adapt arguments to usage context<br>
 :surfer: Argument sharing between methods<br>
-:rocket: Speed up development<br>
+:rocket: Speed up library development<br>
 :hammer_and_wrench: Easy adoption with decorators
 
 ## Quickstart
-Enable lazy execution and automatically set arguments with defaults as aspects:
+Enable lazy execution and automatically annotate arguments with defaults as aspects:
 ```python
 @lazy
 @autoaspects
 def affine(x, scale=1, offset=0):
     return x*scale + offset
 ```
-Produce results with normal python code:
+Produce results with python code:
 ```python
 GM = (affine(2)*affine(8))**0.5
 ```
-Declare aspect argument values to be shared with all method calls:
+Set aspect values to previous code:
 ```python
 print(GM(scale=3))  # 12
 ```
 
 ## Advanced features
-Lazy methods calling lazy methods:
+<details>
+<summary>Lazy methods calling each other</summary>
+
 ```python
 @lazy
 @autoaspects
-def gm(x, y, affine=affine):
+def gm(x, y, affine=affine):  # pass the method as an argument
     return (affine(x)*affine(y))**0.5
 
 GM = gm(2, 8)
 print(GM(scale=3))  # 12
 ```
 
-Show context, for example to understand which aspects can be controlled:
+</details>
+
+
+<details>
+<summary>List aspects</summary>
+
 ```python
 print(GM.get_input_context(scale=3))
 # context:
@@ -62,7 +69,12 @@ print(GM.get_input_context(scale=3))
 #		 shares: 4
 ```
 
-Aspects are shared with all methods conttibuting to the result:
+</details>
+
+
+<details>
+<summary>Aspects are shared between everything contributing to the result</summary>
+
 ```python
 @lazy
 @autoaspects
@@ -73,7 +85,11 @@ print(affine(2)(scale=2))  # 4
 print((affine(2)+square(1))(scale=2))  # 5
 ```
 
-Manually declare priority-based aspects to resolve conflicting defaults:
+</details>
+
+<details>
+<summary>Priority-based selection between defaults</summary>
+
 ```python
 @lazy
 def logpp(x, offset=Aspect(1, Priority.INCREASED)):
@@ -83,3 +99,44 @@ def logpp(x, offset=Aspect(1, Priority.INCREASED)):
 result = affine(2)+log(3)
 print(result(scale=2))  # 5+2=7
 ```
+
+</details>
+
+
+<details>
+<summary>Lazy execution caching or not</summary>
+
+```python
+@lazy  # sets up caching
+def inc(x):
+    print("running")
+    return x+1
+
+print(inc(2)())
+# running
+# 3 
+print(inc(2)())
+# 3
+print(inc(3)())
+# running
+# 4
+```
+
+```python
+@lazy_no_cache  # disables cache
+def inc(x):
+    print("running")
+    return x+1
+
+print(inc(2)())
+# running
+# 3 
+print(inc(2)())
+# running
+# 3
+print(inc(3)())
+# running
+# 4
+```
+
+</details>

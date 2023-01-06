@@ -498,7 +498,7 @@ def test_implicit_builder_eager():
     assert usage(2)(offset=2) == 5.5
 
 
-def test_implicit_builder_lazy_meta():
+def test_implicit_builder_lazy_transitive():
     @pfp.lazy
     @pfp.autoaspects
     def method(x, offset=1):
@@ -515,3 +515,23 @@ def test_implicit_builder_lazy_meta():
         return usage(x)
 
     assert metausage(2)(offset=1.8, offset2=1.5) == 5.3
+
+
+def test_meta():
+    @pfp.lazy
+    @pfp.autoaspects
+    def method(x, offset=1):
+        return x + offset
+
+    @pfp.lazy
+    @pfp.autoaspects
+    def usage(x, method=method, offset2=2):
+        return method(x) + offset2
+
+    @pfp.meta(usage)
+    @pfp.lazy
+    @pfp.autoaspects
+    def metausage(x, usage=usage):
+        return usage(x)
+
+    assert metausage(2)()() == 5

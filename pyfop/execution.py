@@ -4,8 +4,8 @@ from functools import wraps
 from pyfop.cache import cache
 
 
-def _isfop(val):
-    return isinstance(val, Aspect) or isinstance(val, PendingCall) or isinstance(val, Generator) or isinstance(val, Metamethod)
+def _isfop(val, inherits):
+    return isinstance(val, Aspect) or isinstance(val, PendingCall) or isinstance(val, Generator) or (isinstance(val, Metamethod) and val not in inherits)
 
 
 class Generator:
@@ -34,15 +34,16 @@ class Generator:
 
 
 class PendingCall:
-    def __init__(self, _pyfop_method, *args, supercontext=None, **kwargs):
+    def __init__(self, _pyfop_method, *args, supercontext=None, inherits=(), **kwargs):
         self.method = _pyfop_method
         self.args = args
         self.kwargs = kwargs
         self.inject_aspects_to_context = dict()
         self.supercontext = supercontext  # this is only to be set by the Generator class
+        self.inherits = inherits
 
     def __getattribute__(self, name):
-        if name in ["method", "args", "kwargs", "supercontext", "inject_aspects_to_context"] or name in dir(PendingCall):
+        if name in ["method", "args", "kwargs", "supercontext", "inject_aspects_to_context", "inherits"] or name in dir(PendingCall):
             return object.__getattribute__(self, name)
 
         def future_method(*args, fop_method_result, **kwargs):
@@ -180,13 +181,13 @@ class PendingCall:
             #print(self.method, val, isinstance(val, PendingCall))
             if isinstance(val, PendingCall) or isinstance(val, Generator):
                 val._gather_aspects(context)
-            if isinstance(val, Metamethod):
+            if isinstance(val, Metamethod) and _isfop(val, self.inherits):
                 from pyfop.utils import builder
                 builder(val.method)._gather_aspects(context)
         for val in self.inject_aspects_to_context.values():
             if isinstance(val, PendingCall) or isinstance(val, Generator):
                 val._gather_aspects(context)
-            if isinstance(val, Metamethod):
+            if isinstance(val, Metamethod) and _isfop(val, self.inherits):
                 from pyfop.utils import builder
                 builder(val.method)._gather_aspects(context)
 
@@ -226,8 +227,8 @@ class PendingCall:
             if isinstance(val, Aspect):
                 val.name = arg
         # print(self.method.__name__, kwargs)
-        unnamed = [val._call(context) if _isfop(val) else val for val in unnamed]
-        kwargs = {arg: val._call(context) if _isfop(val) else val for arg, val in kwargs.items()}
+        unnamed = [val._call(context) if _isfop(val, self.inherits) else val for val in unnamed]
+        kwargs = {arg: val._call(context) if _isfop(val, self.inherits) else val for arg, val in kwargs.items()}
         return self.method(*unnamed, **kwargs)
 
 
@@ -236,13 +237,24 @@ class Metamethod:
         self.method = method
         self.supplementary_args = supplementary_args
         self.supplementary_kwargs = supplementary_kwargs
+        self.inherits = []
 
     def _call(self, context):
         from pyfop.utils import builder
         return builder(self.method)._call(context)
 
     def __call__(self, *args, **kwargs):
-        return PendingCall(self.method, *(self.supplementary_args+args), **(self.supplementary_kwargs | kwargs))
+        return PendingCall(self.method, *(self.supplementary_args+args), **(self.supplementary_kwargs | kwargs), inherits=self.inherits)
+
+
+def meta(*inherits):
+    def inner(method):
+        if not isinstance(method, Metamethod):
+            raise Exception("Can only wrap @lazy or @lazy_no_cache methods with @meta(...)")
+        method = Metamethod(method.method, *method.supplementary_args, **method.supplementary_kwargs)
+        method.inherits = set(inherits)
+        return method
+    return inner
 
 
 def lazy(method, *supplementary_args, **supplementary_kwargs):
@@ -340,7 +352,6 @@ def gt(x, y):
 @lazy
 def lt(x, y):
     return x < y
-
 
 
 @lazy
