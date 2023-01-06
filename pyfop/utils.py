@@ -1,7 +1,14 @@
 from pyfop.execution import PendingCall, Metamethod, lazy
 from pyfop.aspect import Aspect, Priority
-from inspect import signature, Parameter
+import inspect# import signature, Parameter
+from inspect import Parameter
 from makefun import wraps, add_signature_parameters, remove_signature_parameters
+
+
+def signature(obj):
+    if hasattr(obj, "_method"):
+        obj = obj._method
+    return inspect.signature(obj)
 
 
 def builder(method):

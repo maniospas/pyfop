@@ -456,13 +456,41 @@ def test_builder():
     assert usage(2)(offset=2) == 5.5
 
 
-def test_implicit_builder():
+def test_implicit_builder_lazy():
+    @pfp.lazy
+    @pfp.autoaspects
+    def method(x, offset=1):
+        return x + offset
+
+    @pfp.lazy
+    @pfp.autoaspects
+    def usage(x, method=method):
+        return method(x) + 1.5
+
+    assert usage(2)(offset=2) == 5.5
+
+
+def test_implicit_builder_mixed():
     @pfp.lazy_no_cache
     @pfp.autoaspects
     def method(x, offset=1):
         return x + offset
 
     @pfp.lazy
+    @pfp.autoaspects
+    def usage(x, method=method):
+        return method(x) + 1.5
+
+    assert usage(2)(offset=2) == 5.5
+
+
+def test_implicit_builder_eager():
+    @pfp.lazy_no_cache
+    @pfp.autoaspects
+    def method(x, offset=1):
+        return x + offset
+
+    @pfp.lazy_no_cache
     @pfp.autoaspects
     def usage(x, method=method):
         return method(x) + 1.5

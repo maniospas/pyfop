@@ -1,6 +1,5 @@
 from functools import update_wrapper
 
-
 _all_objects = list()  # keeping objects in memory prevents ids from being reused
 _hashers = list()
 
@@ -33,7 +32,6 @@ class MethodHasher:
         self._method = method
         self._stored = dict()
         _hashers.append(self)
-        update_wrapper(self, method)
 
     def clear_hashed(self):
         self._stored = dict()
@@ -48,4 +46,6 @@ class MethodHasher:
 
 
 def cache(method):
-    return MethodHasher(method)
+    ret = MethodHasher(method)
+    #update_wrapper(ret, method)
+    return ret

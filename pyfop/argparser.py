@@ -1,14 +1,20 @@
 import inspect
 
 
+def signature(obj):
+    if hasattr(obj, "_method"):
+        obj = obj._method
+    return inspect.signature(obj)
+
+
 def parse_defaults(method):
-    return {arg: v.default for arg, v in inspect.signature(method).parameters.items()
+    return {arg: v.default for arg, v in signature(method).parameters.items()
             if not hasattr(v.default, "__name__") or v.default.__name__ != '_empty'}
 
 
 def parse_positional(method, args):
     ret = dict()
-    method_args = list(inspect.signature(method).parameters)
+    method_args = list(signature(method).parameters)
     method_args_pos = 0
     unnamed = list()
     for val in args:
@@ -18,7 +24,7 @@ def parse_positional(method, args):
             ret[method_args[method_args_pos]] = val
             method_args_pos += 1
     return ret, unnamed
-    #return {arg: val for arg, val in zip(list(inspect.signature(method).parameters)[:len(args)], args)}
+    #return {arg: val for arg, val in zip(list(signature(method).parameters)[:len(args)], args)}
 
 
 def combine(*kwarg_list):

@@ -6,9 +6,7 @@ from setuptools import setup
 
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()\
-        .replace(":brain: ", "").replace(":brain: ", "").replace(":hammer_and_wrench: ", "")\
-        .replace(":fire: ", "").replace(":zap: ", "")
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
 setup(
