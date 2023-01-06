@@ -20,18 +20,18 @@ and determines their values *after* the main business logic.
 :hammer_and_wrench: Easy adoption with decorators
 
 ## Quickstart
-1. Enable lazy execution and automatically set arguments with defaults as aspects
+Enable lazy execution and automatically set arguments with defaults as aspects:
 ```python
 @lazy
 @autoaspects
 def affine(x, scale=1, offset=0):
     return x*scale + offset
 ```
-2. Produce results per normal python code
+Produce results with normal python code:
 ```python
 GM = (affine(2)*affine(8))**0.5
 ```
-3. Declare aspect argument values to be shared with all method calls
+Declare aspect argument values to be shared with all method calls:
 ```python
 print(GM(scale=3))  # 12
 ```
