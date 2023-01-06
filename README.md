@@ -20,24 +20,24 @@ and determines their values *after* the main business logic.
 :hammer_and_wrench: Easy adoption with decorators
 
 ## Quickstart
-:one: Enable lazy execution and automatically set arguments with defaults as aspects
+1. Enable lazy execution and automatically set arguments with defaults as aspects
 ```python
 @lazy
 @autoaspects
 def affine(x, scale=1, offset=0):
     return x*scale + offset
 ```
-:two: Produce results per normal python code
+2. Produce results per normal python code
 ```python
 GM = (affine(2)*affine(8))**0.5
 ```
-:three: Declare aspect argument values to be shared with all method calls
+3. Declare aspect argument values to be shared with all method calls
 ```python
 print(GM(scale=3))  # 12
 ```
 
 ## Advanced features
-:heavy_check_mark: Lazy methods calling lazy methods:
+Lazy methods calling lazy methods:
 ```python
 @lazy
 @autoaspects
@@ -48,7 +48,7 @@ GM = gm(2, 8)
 print(GM(scale=3))  # 12
 ```
 
-:heavy_check_mark: Show context, for example to understand which aspects can be controlled:
+Show context, for example to understand which aspects can be controlled:
 ```python
 print(GM.get_input_context(scale=3))
 # context:
@@ -62,7 +62,7 @@ print(GM.get_input_context(scale=3))
 #		 shares: 4
 ```
 
-:heavy_check_mark: Aspects are shared with all methods conttibuting to the result:
+Aspects are shared with all methods conttibuting to the result:
 ```python
 @lazy
 @autoaspects
@@ -73,7 +73,7 @@ print(affine(2)(scale=2))  # 4
 print((affine(2)+square(1))(scale=2))  # 5
 ```
 
-:heavy_check_mark: Manually declare priority-based aspects to resolve conflicting defaults:
+Manually declare priority-based aspects to resolve conflicting defaults:
 ```python
 @lazy
 def logpp(x, offset=Aspect(1, Priority.INCREASED)):
