@@ -418,3 +418,53 @@ def test_autoaspects_placement():
     assert convergence.converged(None) is False
     assert convergence.converged(None) is False
     assert convergence.converged(None) is True
+
+
+def test_class_method_call():
+    @pfp.lazy
+    @pfp.autoaspects
+    class A:
+        def __init__(self, init=1):
+            self.member = init
+
+        def func(self):
+            self.member += 2
+            return self.member
+
+    a = A()
+    assert a.func()(init=2) == 4
+    assert a.func()(init=2) == 6  # due to hashing
+    assert a.member()(init=2) == 6  # TODO: fix this to not need a parenthesis on member
+    pfp.cache.cleanup()
+    assert a.func()(init=2) == 4
+
+
+def test_builder():
+    # WARNING: builders are automatically constructed by pfp.lazy, so prefer avoiding them (see next test)
+    @pfp.builder
+    @pfp.autoaspects
+    def method(x, offset=1):
+        return x + offset
+
+    assert method(offset=2)(2) == 4
+
+    @pfp.lazy
+    @pfp.autoaspects
+    def usage(x, method=method):
+        return method(x) + 1.5
+
+    assert usage(2)(offset=2) == 5.5
+
+
+def test_implicit_builder():
+    @pfp.lazy_no_cache
+    @pfp.autoaspects
+    def method(x, offset=1):
+        return x + offset
+
+    @pfp.lazy
+    @pfp.autoaspects
+    def usage(x, method=method):
+        return method(x) + 1.5
+
+    assert usage(2)(offset=2) == 5.5

@@ -1,12 +1,12 @@
-from pyfop.execution import PendingCall, lazy
+from pyfop.execution import PendingCall, Metamethod, lazy
 from pyfop.aspect import Aspect, Priority
 from inspect import signature, Parameter
 from makefun import wraps, add_signature_parameters, remove_signature_parameters
 
 
-def lazybuilder(method):
+def builder(method):
     if isinstance(method, type):
-        return type(method.__name__, (method,), {"__init__": lazybuilder(method.__init__)})
+        return type(method.__name__, (method,), {"__init__": builder(method.__init__)})
 
     params = signature(method)
     new_params = list()
@@ -42,7 +42,7 @@ def autoaspects(method):
         else:
             new_params.append(Parameter(value.name, value.kind,
                               default=Aspect(value.default, Priority.NORMAL)
-                              if not isinstance(value.default, Aspect) and not isinstance(value.default, PendingCall)
+                              if not isinstance(value.default, Aspect) and not isinstance(value.default, PendingCall)  and not isinstance(value.default, Metamethod)
                               else value.default))
 
     @wraps(method, new_sig=params.replace(parameters=new_params))

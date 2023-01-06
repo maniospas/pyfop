@@ -5,7 +5,7 @@ from pyfop.cache import cache
 
 
 def _isfop(val):
-    return isinstance(val, Aspect) or isinstance(val, PendingCall) or isinstance(val, Generator)
+    return isinstance(val, Aspect) or isinstance(val, PendingCall) or isinstance(val, Generator) or isinstance(val, Metamethod)
 
 
 class Generator:
@@ -125,14 +125,19 @@ class PendingCall:
         self._gather_aspects(context)
         return context
 
+    def get_input_methods(self):
+        methods = list()
+        self._gather_methods(methods)
+        return methods
+
     def call(self, **kwargs):
         context = Context()
         context.extend(kwargs, Priority.HIGH)
         self._gather_aspects(context)
         ret = self._call(context)
-        if isinstance(ret, PendingCall):
-            ret._gather_aspects(context)
-            ret = ret._call(context)
+        #if isinstance(ret, PendingCall):
+        #    ret._gather_aspects(context)
+        #    ret = ret._call(context)
         if self.supercontext is None:  # TODO: this is a hack, find an actual fix
             context.catch_unused()
         return ret
@@ -172,11 +177,45 @@ class PendingCall:
                 val.name = arg
                 context.add(val.extended_name(), val, is_default=False)
         for val in kwargs.values():
+            #print(self.method, val, isinstance(val, PendingCall))
             if isinstance(val, PendingCall) or isinstance(val, Generator):
                 val._gather_aspects(context)
+            if isinstance(val, Metamethod):
+                from pyfop.utils import builder
+                builder(val.method)._gather_aspects(context)
         for val in self.inject_aspects_to_context.values():
             if isinstance(val, PendingCall) or isinstance(val, Generator):
                 val._gather_aspects(context)
+            if isinstance(val, Metamethod):
+                from pyfop.utils import builder
+                builder(val.method)._gather_aspects(context)
+
+    def _gather_methods(self, methods):
+        methods.append(self.method._method if hasattr(self.method, "_method") else self.method)
+        defaults = argparser.parse_defaults(self.method)
+        positional, unnamed = argparser.parse_positional(self.method, self.args)
+        kwargs = argparser.combine(defaults, positional, self.kwargs)
+        for arg, val in defaults.items():
+            if isinstance(val, Aspect):
+                val.name = arg
+                if isinstance(kwargs[arg], Aspect):
+                    kwargs[arg].name = arg
+                kwargs[arg] = val
+        for arg, val in kwargs.items():
+            if isinstance(val, Aspect):
+                val.name = arg
+                if isinstance(kwargs[arg], Aspect):
+                    kwargs[arg].name = arg
+                kwargs[arg] = val
+        for arg, val in self.inject_aspects_to_context.items():
+            if isinstance(val, Aspect):
+                val.name = arg
+        for val in kwargs.values():
+            if isinstance(val, PendingCall):
+                val._gather_methods(methods)
+        for val in self.inject_aspects_to_context.values():
+            if isinstance(val, PendingCall):
+                val._gather_methods(methods)
 
     def _call(self, context):
         positional, unnamed = argparser.parse_positional(self.method, self.args)
@@ -192,20 +231,35 @@ class PendingCall:
         return self.method(*unnamed, **kwargs)
 
 
+class Metamethod:
+    def __init__(self, method, *supplementary_args, **supplementary_kwargs):
+        self.method = method
+        self.supplementary_args = supplementary_args
+        self.supplementary_kwargs = supplementary_kwargs
+
+    def _call(self, context):
+        from pyfop.utils import builder
+        return builder(self.method)._call(context)
+
+    def __call__(self, *args, **kwargs):
+        return PendingCall(self.method, *(self.supplementary_args+args), **(self.supplementary_kwargs | kwargs))
+
+
 def lazy(method, *supplementary_args, **supplementary_kwargs):
     method = cache(method)
-
-    @wraps(method)
-    def wrapper(*args, **kwargs):
-        return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
-    return wrapper
+    return Metamethod(method, *supplementary_args, **supplementary_kwargs)
+    #@wraps(method)
+    #def wrapper(*args, **kwargs):
+    #    return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
+    #return wrapper
 
 
 def lazy_no_cache(method, *supplementary_args, **supplementary_kwargs):
-    @wraps(method)
-    def wrapper(*args, **kwargs):
-        return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
-    return wrapper
+    #@wraps(method)
+    #def wrapper(*args, **kwargs):
+    #    return PendingCall(method, *(supplementary_args+args), **(supplementary_kwargs | kwargs))
+    #return wrapper
+    return Metamethod(method, *supplementary_args, **supplementary_kwargs)
 
 
 def eager_no_cache(method):

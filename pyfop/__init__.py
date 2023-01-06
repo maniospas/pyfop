@@ -1,6 +1,6 @@
 from pyfop.aspect import Aspect, Priority
 from pyfop.execution import lazy, eager, lazy_no_cache, eager_no_cache, Generator
-from pyfop.utils import autoaspects, lazybuilder
+from pyfop.utils import autoaspects, builder
 from pyfop.cache import CacheScope
 import sys
 
@@ -24,7 +24,7 @@ class Lazifier(object):
         ret = method
         if auto:
             ret = autoaspects(ret)
-        ret = lazybuilder(ret) if tobuilder else lazy(ret)
+        ret = builder(ret) if tobuilder else lazy(ret)
         self.mapper[ret] = method
         setattr(sys.modules[method.__module__], method.__name__, ret)
         return ret

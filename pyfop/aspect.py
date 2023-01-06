@@ -58,7 +58,8 @@ class Context:
     def __init__(self):
         self.values = dict()
         self.priorities = dict()
-        self.usages = dict()
+        self.usages = dict()  # counts whether the variable has been set at the given priority (there could be more total shares afterwards)
+        self.shares = dict()
 
     def to_aspects(self):
         ret = dict()
@@ -82,7 +83,11 @@ class Context:
                 raise Exception("Unused argument: "+arg)
             self.values[arg] = _value(arg, val)
             self.priorities[arg] = _priority(val, default_priority)
-            self.usages[arg] = 1 if is_default else 0
+            self.shares[arg] = self.shares.get(arg, 0) + 1
+            if priority_diff == 0 and arg in self.usages:
+                self.usages[arg] += 1
+            else:
+                self.usages[arg] = 1 if is_default else 0
 
     def extend(self, kwargs, default_priority=Priority.HIGH, is_default=False):
         for arg, val in kwargs.items():
@@ -100,7 +105,7 @@ class Context:
 
     def __iter__(self):
         for item in self.values:
-            yield item, self.values[item], self.priorities[item], self.usages[item]
+            yield item, self.values[item], self.priorities[item], self.shares[item]
 
     def __contains__(self, item):
         return item in self.values
