@@ -8,7 +8,7 @@ and determines their values *after* the main business logic.
 [![codecov](https://codecov.io/gh/maniospas/pyfop/branch/main/graph/badge.svg?token=MCsMLyteqD)](https://codecov.io/gh/maniospas/pyfop)
 [![Downloads](https://static.pepy.tech/personalized-badge/pyfop?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads)](https://pepy.tech/project/pyfop)
 
-**Dependencies:** None<br/>
+**Dependencies:** `makefun`<br/>
 **Developer:** Emmanouil (Manios) Krasanakis<br/>
 **Contant:** maniospas@hotmail.com
 

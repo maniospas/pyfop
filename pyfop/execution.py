@@ -78,10 +78,10 @@ class PendingCall:
         return lt(self, other)
 
     def __ge__(self, other):
-        return gt(self, other)
+        return ge(self, other)
 
     def __le__(self, other):
-        return lt(self, other)
+        return le(self, other)
 
     def __neg__(self):
         return neg(self)
