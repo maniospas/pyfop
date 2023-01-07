@@ -67,8 +67,12 @@ def test_aspect_default_operations():
     def strange(x, inc=pfp.Aspect(3)):
         return x+inc
 
-    y1 = abs((strange(1)*2 + 1) / 3-6) == 3
+    y1 = -abs((strange(1)*2 + 1) / 3-6)**2 == -9
     assert y1.call()
+    assert (strange(1) >= 3).call()
+    assert (strange(1) <= 5).call()
+    assert (strange(1) > 3).call()
+    assert (strange(1) < 5).call()
     with pytest.raises(Exception):
         assert (not y1).call(inc=2)  # assert error check for not converting to bool
 
@@ -246,10 +250,13 @@ def test_lazifier():
     desired = np.sum(x, axis=0) + np.mean(y, axis=0)
 
     with pfp.Lazifier() as lazifier:
-        lazifier.lazify(np.sum)
-        lazifier.lazify(np.mean)
+        prev = np.mean
+        lazifier(np.sum)
+        lazifier(np.mean)
         r1 = np.sum(x)
         r2 = np.mean(y)
+        with pytest.raises(Exception):
+            lazifier(prev)
     assert str((r1 + r2).call(axis=0)) == str(desired)
     assert np.sum(x) == 9
 
@@ -535,3 +542,6 @@ def test_meta():
         return usage(x)
 
     assert metausage(2)()() == 5
+
+    with pytest.raises(Exception):  # assert that it can only be applied on lazy execution
+        pfp.meta()(lambda x: x)

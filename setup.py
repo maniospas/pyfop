@@ -23,7 +23,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=['makefun'],
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent"
