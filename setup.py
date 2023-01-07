@@ -6,12 +6,12 @@ from setuptools import setup
 
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname)).read().replace(":alembic:", "-").replace(":surfer:", "-").replace(":rocket:", "-").replace(":hammer_and_wrench:", "-")
 
 
 setup(
     name="pyfop",
-    version="0.3.3",
+    version="0.3.4",
     author="Emmanouil Krasanakis",
     author_email="maniospas@hotmail.com",
     description=("A forward-oriented programming paradigm for Python."),

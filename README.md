@@ -1,4 +1,4 @@
-# pyfop
+![pyfop](docs/logo.png)
 Implements 
 [forward-oriented programming](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4180025)
 in Python. This shares configuration arguments across multiple components
