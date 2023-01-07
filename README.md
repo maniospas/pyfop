@@ -22,6 +22,8 @@ and determines their values *after* the main business logic.
 ## Quickstart
 Enable lazy execution and automatically annotate arguments with defaults as aspects:
 ```python
+from pyfop import lazy, autoaspects
+
 @lazy
 @autoaspects
 def affine(x, scale=1, offset=0):
@@ -38,7 +40,7 @@ print(GM(scale=3))  # 12
 
 ## Advanced features
 <details>
-<summary>Lazy methods calling each other</summary>
+<summary>Internal call of lazy methods while exposing their aspects.</summary>
 
 ```python
 @lazy
@@ -54,7 +56,7 @@ print(GM(scale=3))  # 12
 
 
 <details>
-<summary>List aspects</summary>
+<summary>Print list of aspects.</summary>
 
 ```python
 print(GM.get_input_context(scale=3))
@@ -104,10 +106,10 @@ print(result(scale=2))  # 5+2=7
 
 
 <details>
-<summary>Lazy execution caching or not</summary>
+<summary>Toggle caching.</summary>
 
 ```python
-@lazy  # sets up caching
+@lazy  # automatically performs caching
 def inc(x):
     print("running")
     return x+1
@@ -123,7 +125,7 @@ print(inc(3)())
 ```
 
 ```python
-@lazy_no_cache  # disables cache
+@lazy_no_cache  # disables caching
 def inc(x):
     print("running")
     return x+1
