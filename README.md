@@ -33,7 +33,7 @@ Produce results with python code:
 ```python
 GM = (affine(2)*affine(8))**0.5
 ```
-Set aspect values to previous code:
+Set aspect values of previous code:
 ```python
 print(GM(scale=3))  # 12
 ```
@@ -75,7 +75,7 @@ print(GM.get_input_context(scale=3))
 
 
 <details>
-<summary>Aspects are shared between everything contributing to the result</summary>
+<summary>Aspects are shared between everything contributing to the result.</summary>
 
 ```python
 @lazy
@@ -90,7 +90,7 @@ print((affine(2)+square(1))(scale=2))  # 5
 </details>
 
 <details>
-<summary>Priority-based selection between defaults</summary>
+<summary>Priority-based selection between defaults.</summary>
 
 ```python
 @lazy
